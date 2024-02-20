@@ -7,12 +7,14 @@ public class GazeOverButton : MonoBehaviour
 {
     public Transform raycastOrigin; // Assign this to your Camera or any GameObject
     public float maxRaycastDistance = 100f; // Max distance for the raycast
-    public float activationTime = 1.5f; // Time required for the button to be activated
+    public float activationTime = 5f; // Time required for the button to be activated
     public AudioClip hoverSound; // Sound to play when hovering over the button
+    public AudioClip activationSound; // Sound to play when the button is activated
     private AudioSource audioSource; // AudioSource component for playing the sound
     private float currentActivationTime = 0f; // Time the ray has been on the button
     private bool buttonActivated = false; // Flag to track if the button is activated
     private Button lastHighlightedButton; // Reference to the last highlighted button
+    public LayerMask LayerMaskVariable;
 
     private void Start()
     {
@@ -41,14 +43,15 @@ public class GazeOverButton : MonoBehaviour
 
         // Perform the raycast
         RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, maxRaycastDistance))
+        if (Physics.Raycast(ray, out hit, maxRaycastDistance, LayerMaskVariable))
         {
+            Debug.Log("Hit"+ hit.transform.gameObject.name);
             // Check if the hit object has a Button component
             Button button = hit.collider.gameObject.GetComponent<Button>();
             if (button != null)
             {
                 // Play hover sound
-                if (audioSource != null && hoverSound != null)
+                if (audioSource != null && hoverSound != null && !audioSource.isPlaying)
                 {
                     audioSource.PlayOneShot(hoverSound);
                 }
@@ -75,6 +78,11 @@ public class GazeOverButton : MonoBehaviour
                     {
                         button.onClick.Invoke();
                         buttonActivated = true;
+                        // Play activation sound
+                        if (audioSource != null && activationSound != null)
+                        {
+                            audioSource.PlayOneShot(activationSound);
+                        }
                     }
                 }
             }
@@ -88,6 +96,11 @@ public class GazeOverButton : MonoBehaviour
                     lastHighlightedButton.colors = ColorBlock.defaultColorBlock; // Reset last highlighted button
                     lastHighlightedButton = null;
                 }
+                // Stop the audio if raycast doesn't hit the button
+                if (audioSource != null && audioSource.isPlaying)
+                {
+                    audioSource.Stop();
+                }
             }
         }
         else
@@ -99,6 +112,11 @@ public class GazeOverButton : MonoBehaviour
             {
                 lastHighlightedButton.colors = ColorBlock.defaultColorBlock; // Reset last highlighted button
                 lastHighlightedButton = null;
+            }
+            // Stop the audio if raycast doesn't hit anything
+            if (audioSource != null && audioSource.isPlaying)
+            {
+                audioSource.Stop();
             }
         }
     }
